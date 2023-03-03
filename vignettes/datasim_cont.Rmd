@@ -1,0 +1,123 @@
+---
+title: "How to simulate continuous data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{How to simulate continuous data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+opts_chunk$set(echo = TRUE,
+               message = FALSE,
+               error = FALSE,
+               warning = FALSE,
+               comment = "",
+               fig.align = "center",
+               out.width = "70%")
+```
+
+```{r}
+library(NCC)
+```
+
+
+## datasim_cont()
+
+The function `datasim_cont()` enables data simulation of a platform trial with continuous endpoint and an arbitrary number of treatment arms entering at different time points.
+
+## Assumptions
+
+- equal sample sizes across all treatment arms, different sample size for the control group (resulting from allocation ratio 1:1:...:1 in each period)
+- block randomization is used, a factor to multiply the number of active arms with in order to get the block size in each period can be specified as input argument (`period_blocks`, default=2)
+
+## Notation
+
+<table>
+    <tr>
+        <td><b>Paper</b></td>
+        <td><b>Software</b></td>
+    </tr>
+    <tr>
+        <td>$N$</td>
+        <td>n_total</td>
+    </tr>
+    <tr>
+        <td>$K$</td>
+        <td>num_arms</td>
+    </tr>
+    <tr>
+        <td>$d$</td>
+        <td>d</td>
+    </tr>
+    <tr>
+        <td>$n$</td>
+        <td>n_arm</td>
+    </tr>
+    <tr>
+        <td>$\eta_0$</td>
+        <td>mu0</td>
+    </tr>
+    <tr>
+        <td>$\theta$</td>
+        <td>theta</td>
+    </tr>
+    <tr>
+        <td>$\lambda$</td>
+        <td>lambda</td>
+    </tr>
+    <tr>
+        <td>$\sigma$</td>
+        <td>sigma</td>
+    </tr>
+    <tr>
+        <td>$N_p$</td>
+        <td>N_peak</td>
+    </tr>
+</table>
+
+## Usage
+
+### Input
+
+The user specifies the number of treatment arms in the trial, the sample size per treatment arm (assumed equal) and the timing of adding arms in terms of patients recruited to the trial so far.
+
+- `num_arms` Number of treatment arms in the trial
+- `n_arm` Sample size per arm (assumed equal)
+- `d` Vector with timings of adding new arms in terms of number of patients recruited to the trial so far (of length `num_arms`)
+- `period_blocks` - number to multiply the number of active arms with in order to get the block size per period (block size = `period_blocks` $\cdot$ #active arms)
+- `mu0` - response in the control arm. Default=0
+- `theta` - vector with treatment effects for each treatment arm (of length `num_arms`)
+- `lambda` - vector with strength of time trend in each arm (of length `num_arms+1`, as time trend in the control is also allowed)
+- `sigma` - residual variance
+- `trend` - indicates the time trend pattern ("linear", "stepwise" or "inv_u")
+- `N_peak` - point at which the inverted-u time trend switches direction in terms of overall sample size
+- `full` - Boolean. Indicates whether the full dataset should be returned. Default=`FALSE`
+
+
+### Output
+
+Per default (using `full=FALSE`), the function outputs a dataframe with simulated trial data needed for the analysis. If the parameter `full` is set to `TRUE`, the output is a list containing an extended version of the dataframe (also including lambdas and underlying responses) and all input parameters.
+
+### Examples
+
+```{r}
+# Dataset with trial data only (default)
+
+head(datasim_cont(num_arms = 3, n_arm = 100, d = c(0, 100, 250), 
+                  theta = rep(0.25, 3), lambda = rep(0.15, 4), 
+                  sigma = 1, trend = "linear"))
+```
+
+
+```{r}
+# Full dataset
+
+head(datasim_cont(num_arms = 3, n_arm = 100, d = c(0, 100, 250), 
+                  theta = rep(0.25, 3), lambda = rep(0.15, 4), 
+                  sigma = 1, trend = "linear", full = T)$Data)
+```
+
+
+
